@@ -7,7 +7,7 @@
 
 ## The problem
 
-Given 79 features describing residential homes in Ames, Iowa — lot size, quality ratings, neighbourhood, basement area, garage capacity, and more — predict the final sale price of each house.
+Given 79 features describing house inlot size, quality ratings, neighbourhood, basement area, garage capacity, and more — predict the final sale price of each house.
 
 **Type:** Supervised regression  
 **Target:** `SalePrice` (continuous)  
@@ -127,43 +127,5 @@ Three models, same data, same evaluation:
 3. **Encoding matters.** Wrong handling of categorical features can silently break model performance.
 4. **Simpler features can still work.** Carefully selected key features performed well without heavy feature engineering.
 5. **Consistency is critical.** Train-time and prediction-time preprocessing must match exactly.
-
----
-
-## How to run
-
-```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/house-prices-ml
-cd house-prices-ml
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run on Kaggle
-# Open house_prices_day1.ipynb in a Kaggle notebook
-# Dataset: House Prices - Advanced Regression Techniques (add via Kaggle UI)
-```
-
-**requirements.txt**
-```
-pandas>=1.5
-numpy>=1.23
-scikit-learn>=1.2
-matplotlib>=3.6
-seaborn>=0.12
-```
-
----
-
-## Files
-
-```
-house-prices-ml/
-├── house_prices_day1.ipynb   # Full notebook — all 12 cells with explanations
-├── submission.csv             # Kaggle submission file
-├── requirements.txt
-└── README.md
-```
 
 ---
