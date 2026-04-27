@@ -1,9 +1,7 @@
 
 # House Prices — End-to-End ML Regression
-**Day 1 of 7 | ML Learning Roadmap**
 
-> Predicting residential house sale prices using the Kaggle House Prices dataset.  
-> Built as part of a structured 7-day ML curriculum — focus on understanding every step deeply, not just running code.
+> Predicting house sale prices using the Kaggle House Prices dataset.  
 
 ---
 
@@ -12,45 +10,36 @@
 Given 79 features describing residential homes in Ames, Iowa — lot size, quality ratings, neighbourhood, basement area, garage capacity, and more — predict the final sale price of each house.
 
 **Type:** Supervised regression  
-**Target:** `SalePrice` (continuous, in USD)  
-**Dataset:** [Kaggle House Prices: Advanced Regression Techniques](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques)  
+**Target:** `SalePrice` (continuous)  
+**Dataset:** [Kaggle House Prices: Advanced Regression Techniques 
 **Training samples:** 1,460 houses | **Test samples:** 1,459 houses | **Features:** 79
 
 ---
 
 ## My hypotheses before looking at the data
 
-Before writing a single line of model code, I wrote down what I expected to find:
-
 1. I expected bedroom count to be the most important feature
 2. I expected most houses to sell between $150k and $300k
 3. I expected neighbourhood to be a top-5 predictor
 4. I expected newer houses to always sell for more
 
-**What the data actually showed:** OverallQual (overall build quality) was the #1 correlator at r=0.79 — not square footage, not bedrooms. Quality of construction matters more than size. My neighbourhood hypothesis was partially right — but OverallQual dominated it.
-
+**What the data actually showed:** OverallQual (overall build quality) was the #1 correlator at r=0.79 — not square footage, not bedrooms. Quality of construction matters more than size.
 ---
 
 ## EDA findings
 
 ### 1. The target is right-skewed — log-transform required
-
-Raw `SalePrice` ranges from $34,900 to $755,000 with a skewness of **1.88**. A handful of expensive properties pull the mean ($180k) well above the median ($163k). Linear regression assumes a normally distributed target, so I applied `log1p()` transformation — reducing skewness to **0.12** and making errors proportional to price rather than absolute.
-
 ```python
 # Before: skewness = 1.88 (heavily right-skewed)
 # After:  skewness = 0.12 (nearly normal)
 y = np.log1p(train['SalePrice'])
 ```
 
-### 2. The two outliers that would have broken my model
+### 2. The outliers that would have broken my model
 
-In the `GrLivArea` vs `SalePrice` scatter plot, two houses stood out immediately:
+In the `GrLivArea` vs `SalePrice` scatter plot, some houses stood out immediately:
 - Above-ground living area: **4,676 sq ft** and **5,642 sq ft**
 - Sale price: **$160,000** and **$184,750**
-
-Enormous houses selling for less than average. These are almost certainly partial sales or unusual transactions — not representative of the market. Including them would teach the model that huge houses are cheap, which is factually wrong for 99.9% of real sales.
-
 **Action:** Removed both rows before training.
 
 ### 3. What actually drives house prices
