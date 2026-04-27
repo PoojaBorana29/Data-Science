@@ -109,7 +109,7 @@ Used key features (area, quality, year) for simplicity and performance.
 
 ```python
 df = df.reindex(columns=feature_columns, fill_value=0)
-
+```
 ## Models compared
 
 Three models, same data, same evaluation:
