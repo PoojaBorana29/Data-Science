@@ -126,6 +126,4 @@ Three models, same data, same evaluation:
 2. **Missing ≠ random.** Filling values based on context (not blindly) improves data quality.
 3. **Encoding matters.** Wrong handling of categorical features can silently break model performance.
 4. **Simpler features can still work.** Carefully selected key features performed well without heavy feature engineering.
-5. **Consistency is critical.** Train-time and prediction-time preprocessing must match exactly.
-
 ---
