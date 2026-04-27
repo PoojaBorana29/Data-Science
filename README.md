@@ -69,98 +69,64 @@ Every fill decision is a hypothesis about reality. Filling "no pool" with averag
 ---
 
 ## Feature engineering
+### 3. What drives house prices  
 
-I created 5 new features from domain reasoning — things a house buyer actually thinks about:
+| Feature | Meaning |
+|---|---|
+| OverallQual | Build quality |
+| GrLivArea | Living area |
+| GarageArea | Garage size |
+| TotalBsmtSF | Basement area |
+| YearBuilt | House age |
 
-| Feature | Formula | Reasoning |
-|---|---|---|
-| `TotalSF` | BsmtSF + 1stFlrSF + 2ndFlrSF | Total livable area — what buyers actually care about |
-| `TotalBath` | FullBath + 0.5×HalfBath + BsmtBath | One combined bathroom signal |
-| `HouseAge` | YrSold − YearBuilt | Age at time of sale |
-| `RemodAge` | YrSold − YearRemodAdd | How recently renovated |
-| `WasRemodeled` | YearBuilt ≠ YearRemodAdd | Binary: ever renovated? |
-
-**Result:** `TotalSF` ranked **#1 in feature importance** — above all 79 original features. Combining 3 area columns into what buyers reason about outperformed any individual area column. This is what feature engineering is for.
-
----
-
-## Encoding strategy
-
-Used two different strategies depending on feature type:
-
-**Label encoding** for quality ratings (10 columns) — because Poor < Fair < Typical < Good < Excellent is a real ordering. Encoding as 0–5 preserves that meaning.
-
-**One-hot encoding** for everything else — because `Neighbourhood=CollgCr` is not numerically better or worse than `Neighbourhood=Somerst`. They're just different.
-
-Using label encoding on neighbourhood would imply a false ordering. Using one-hot on quality ratings would throw away the ordering signal. Wrong encoding = silent accuracy loss.
+**Insight:** Quality impacts price more than size.
 
 ---
 
-## Data leakage prevention
+### 4. Missing data  
 
-Split train/val **before** fitting the `StandardScaler`. The scaler was fit on training data only, then applied to val and test:
+- Numerical → median  
+- Categorical → mode / `"None"`  
+
+**Note:** Missing values handled based on context.
+
+---
+
+## Feature selection  
+
+Used key features (area, quality, year) for simplicity and performance.
+
+---
+
+## Encoding  
+
+- Ordinal → quality features  
+- One-hot → nominal features  
+
+---
+
+## Data consistency  
 
 ```python
-scaler = StandardScaler()
-X_tr_s  = scaler.fit_transform(X_tr)   # learns mean/std from train only
-X_val_s = scaler.transform(X_val)      # applies train stats to val
-X_test_s = scaler.transform(X_test)    # same for test
-```
-
-Fitting the scaler on all data would let test-set statistics influence training — making val scores optimistically wrong.
-
----
+df = df.reindex(columns=feature_columns, fill_value=0)
 
 ## Models compared
 
 Three models, same data, same evaluation:
 
-| Model | Val RMSE | CV RMSE (5-fold) | Notes |
-|---|---|---|---|
-| Linear Regression | 0.1306 | 0.1307 | Needs scaled features |
-| **Ridge (α=10)** | **0.1245** | **0.1278** | Best overall |
-| Random Forest | 0.1459 | 0.1381 | No scaling needed |
+| Model | Performance | Notes |
+|---|---|---|
+| Linear Regression | Good baseline | Requires scaled features |
+| Random Forest | Moderate performance | Handles non-linearity, no scaling needed |
+| **XGBoost** | **Best overall** | Captures complex patterns, strong on tabular data |
 
-**RMSE is on log-prices** — so 0.13 means roughly 13% average error on sale price.
+## Conclusion
 
-### Why Ridge beat Random Forest — and what that means
-
-Random Forest is usually the go-to for tabular data. Here it lost to a regularized linear model. Why?
-
-- The dataset has **~220 features after encoding** but only **1,166 training samples** — a relatively high-dimensional space where linear models with regularization often outperform trees
-- Ridge penalises large coefficients, preventing it from overfitting to correlated features (e.g. GarageArea and GarageCars are highly correlated)
-- Random Forest's CV RMSE (0.1381) is notably worse than its Val RMSE (0.1459) — suggesting variance in its predictions depending on which data it sees
-
-**Key takeaway:** More complex model ≠ better model. Always compare against a well-tuned linear baseline before reaching for an ensemble.
-
-### Cross-validation vs single split
-
-For Linear Regression, Val RMSE (0.1306) ≈ CV RMSE (0.1307) — almost identical. This means the single 80/20 split was representative and the model is stable.
-
-For Random Forest, there's a larger gap — the model's performance varies more depending on which subset it trains on. CV RMSE is the more trustworthy number.
-
----
-
-## What I would do next
-
-- Try **XGBoost / LightGBM** — gradient boosted trees that often outperform both linear models and random forests on structured data
-- **Tune Ridge's alpha** — 10 was chosen heuristically; cross-validated grid search over [0.1, 1, 10, 100] would likely improve it
-- **Stack the models** — blending Ridge and Random Forest predictions often beats either alone
-- **More feature engineering** — total porch area, has a fireplace (binary), price-per-sqft of neighbourhood median
-
----
-
-## What I learned
-
-1. **EDA earns you the right to model.** Those 2 outlier houses would have corrupted my model's understanding of large houses. Visualising before modelling caught it.
-
-2. **"Missing" is information.** 99.5% of PoolQC being missing tells you most houses have no pool. Filling with average pool quality is a lie. Every fill decision needs a reason.
-
-3. **Feature engineering beats hyperparameter tuning.** TotalSF — 3 lines of code — became the single most important feature. More creative thinking about the data beats more complex models.
-
-4. **Ridge beating Random Forest is a lesson about dimensionality.** ~220 features, 1166 samples. In this regime, regularised linear models are strong competitors. Complexity has to earn its place.
-
-5. **Fit scalers on train only.** This is the most common subtle data leakage mistake. The fix is one word: `transform` instead of `fit_transform` on val/test.
+1. **EDA comes first.** Detecting and removing outliers prevented misleading patterns in the model.
+2. **Missing ≠ random.** Filling values based on context (not blindly) improves data quality.
+3. **Encoding matters.** Wrong handling of categorical features can silently break model performance.
+4. **Simpler features can still work.** Carefully selected key features performed well without heavy feature engineering.
+5. **Consistency is critical.** Train-time and prediction-time preprocessing must match exactly.
 
 ---
 
