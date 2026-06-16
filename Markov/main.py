@@ -88,11 +88,9 @@ def perplexity(notebook, words, order):
     
     return math.exp(-1/N * total_log_prob)
 
-# Test on Sherlock Holmes text (trained on same data)
 score1 = perplexity(notebook, word, order=2)
 print(f"Sherlock Holmes text: {score1:.2f}")
 
-# Test on different words (make a fake sentence)
 fake = "the cat sat on the mat and ate the fish".split()
 score2 = perplexity(notebook, fake, order=2)
 print(f"Random sentence: {score2:.2f}")
